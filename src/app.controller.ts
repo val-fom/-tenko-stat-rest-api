@@ -5,7 +5,8 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
+  // empty route returns 'Cannot Get null' in serverless mode
+  @Get('hello')
   getHello(): string {
     return this.appService.getHello();
   }

@@ -1,19 +1,23 @@
-import { HttpStatus } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import serverlessExpress from '@vendia/serverless-express';
 import { Callback, Context, Handler } from 'aws-lambda';
 import { AppModule } from './app.module';
-import { AppService } from './app.service';
+
+let server: Handler;
+
+async function bootstrap(): Promise<Handler> {
+  const app = await NestFactory.create(AppModule);
+  await app.init();
+
+  const expressApp = app.getHttpAdapter().getInstance();
+  return serverlessExpress({ app: expressApp });
+}
 
 export const handler: Handler = async (
   event: any,
   context: Context,
   callback: Callback,
 ) => {
-  const appContext = await NestFactory.createApplicationContext(AppModule);
-  const appService = appContext.get(AppService);
-
-  return {
-    body: appService.getHello(),
-    statusCode: HttpStatus.OK,
-  };
+  server = server ?? (await bootstrap());
+  return server(event, context, callback);
 };
